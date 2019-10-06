@@ -130,7 +130,7 @@ if __name__ == '__main__':
 
     if db_prev == '':
         cprint('FINISHED', 'green')
-        cprint('CAN\'T CREATE COMPARISON FILES. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.')
+        cprint('CAN\'T CREATE COMPARISON FILES. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
         exit(2)
 
     create_comparison_files(db_updated, db_prev)
