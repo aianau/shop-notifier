@@ -72,10 +72,16 @@ def create_database_updated():
     return file_name
 
 
+def extract_price(j):
+    return float(j['price'])
+
+
 # returns the filename of the file created
-def create_comparison_stat(db_updated, db_prev):
+def create_comparison_files(db_updated, db_prev):
     stats = list()
-    file_name = ''
+    new = list()
+    file_stat_name = ''
+    file_new_name = ''
 
     with open(db_updated, 'r', encoding='utf-8') as f:
         js_new = json.load(f)
@@ -87,24 +93,29 @@ def create_comparison_stat(db_updated, db_prev):
         for j_old in js_old:
             if j_new['hash'] == j_old['hash']:
                 is_new = False
-                price_new = int(j_new['price'])
-                price_old = int(j_old['price'])
+                price_new = float(j_new['price'])
+                price_old = float(j_old['price'])
                 j_new['price'] = str((price_new-price_old)*100/price_new) + '%'
+                stats.append(j_new)
                 break
         if is_new:
-            j_new['price'] += '-NEW'
-        stats.append(js_new)
+            new.append(j_new)
+
+    new.sort(key=extract_price, reverse=True)
 
     try:
-        file_name = create_file_name_today_date('.stat')
-        with open(file_name, 'w+', encoding='utf-8') as f:
+        file_stat_name = create_file_name_today_date('.stat')
+        with open(file_stat_name, 'w+', encoding='utf-8') as f:
+            json.dump(stats, f, ensure_ascii=False, indent=4)
+        file_new_name = create_file_name_today_date('.stat')
+        with open(file_new_name, 'w+', encoding='utf-8') as f:
             json.dump(stats, f, ensure_ascii=False, indent=4)
     except Exception as e:
         cprint(e, 'red')
 
-    cprint('DONE - created stat ' + file_name, 'green')
+    cprint('DONE - created stat ' + file_stat_name, 'green')
 
-    return file_name
+    return file_stat_name
 
 
 if __name__ == '__main__':
@@ -114,7 +125,7 @@ if __name__ == '__main__':
     db_updated = create_database_updated()
 
 
-    create_comparison_stat(db_updated, db_prev)
+    create_comparison_files(db_updated, db_prev)
 
     cprint('FINISHED', 'green')
 
