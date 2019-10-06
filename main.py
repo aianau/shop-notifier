@@ -12,13 +12,17 @@ def print_separator(sep='='):
 def get_previous_file_name_after_date(extension: str):
     max = defines.min_date
     for file in glob.glob('*' + extension):
+
         y, m, d = [int(x) for x in file.split('.')[0].split('_')]
         prev = datetime.datetime(day=d, month=m, year=y)
 
         if prev > max:
             max = prev
 
-    return str(max)[:10].replace('-', '_') + extension
+    if max != defines.min_date:
+        return str(max)[:10].replace('-', '_') + extension
+    else:
+        return ''
 
 
 def create_file_name_today_date(extension: str):
@@ -124,6 +128,10 @@ if __name__ == '__main__':
     db_prev = get_previous_file_name_after_date(extension='.db')
     db_updated = create_database_updated()
 
+    if db_prev == '':
+        cprint('FINISHED', 'green')
+        cprint('CAN\'T CREATE COMPARISON FILES. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.')
+        exit(2)
 
     create_comparison_files(db_updated, db_prev)
 
