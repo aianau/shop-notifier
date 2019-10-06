@@ -1,4 +1,4 @@
-import defines, time, hashlib, json
+import defines, time, hashlib, json, datetime, glob
 from selenium import webdriver
 from datetime import date
 from termcolor import cprint
@@ -9,8 +9,25 @@ def print_separator(sep='='):
     print(sep*30)
 
 
-def create_database():
+def get_previous_file_name_after_date(extension: str):
+    max = defines.min_date
+    for file in glob.glob('*' + extension):
+        y, m, d = [int(x) for x in file.split('.')[0].split('_')]
+        prev = datetime.datetime(day=d, month=m, year=y)
+
+        if prev > max:
+            max = prev
+
+    return str(max)[:10].replace('-', '_') + extension
+
+
+def create_file_name_today_date(extension: str):
+    return str(date.today().strftime("%Y/%m/%d")).replace('/', '_') + extension
+
+# returns the filename of the file created
+def create_database_updated():
     js = list()
+    file_name = ''
 
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
@@ -36,25 +53,70 @@ def create_database():
 
             js.append(
                 {
-                    'product_name': product_name,
-                    'product_price': product_price,
-                    'product_link': product_link,
-                    'product_hash': product_hash
+                    'name': product_name,
+                    'price': product_price,
+                    'link': product_link,
+                    'hash': product_hash
                 }
             )
 
     try:
-        with open('db_' + date.today().strftime("%d/%m/%Y").replace('/', '_'), 'w+', encoding='utf-8') as f:
+        file_name = create_file_name_today_date(extension='.db')
+        with open(file_name, 'w+', encoding='utf-8') as f:
             json.dump(js, f, ensure_ascii=False, indent=4)
     except Exception as e:
         cprint(e, 'red')
 
-    cprint('DONE - created database for ' + date.today().strftime("%d/%m/%Y").replace('/', '_'), 'green')
+    cprint('DONE - created database for ' + file_name, 'green')
+
+    return file_name
+
+
+# returns the filename of the file created
+def create_comparison_stat(db_updated, db_prev):
+    stats = list()
+    file_name = ''
+
+    with open(db_updated, 'r', encoding='utf-8') as f:
+        js_new = json.load(f)
+    with open(db_prev, 'r', encoding='utf-8') as f:
+        js_old = json.load(f)
+
+    for j_new in js_new:
+        is_new = True
+        for j_old in js_old:
+            if j_new['hash'] == j_old['hash']:
+                is_new = False
+                price_new = int(j_new['price'])
+                price_old = int(j_old['price'])
+                j_new['price'] = str((price_new-price_old)*100/price_new) + '%'
+                break
+        if is_new:
+            j_new['price'] += '-NEW'
+        stats.append(js_new)
+
+    try:
+        file_name = create_file_name_today_date('.stat')
+        with open(file_name, 'w+', encoding='utf-8') as f:
+            json.dump(stats, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        cprint(e, 'red')
+
+    cprint('DONE - created stat ' + file_name, 'green')
+
+    return file_name
 
 
 if __name__ == '__main__':
     init_color()
-    create_database()
+
+    db_prev = get_previous_file_name_after_date(extension='.db')
+    db_updated = create_database_updated()
+
+
+    create_comparison_stat(db_updated, db_prev)
+
+    cprint('FINISHED', 'green')
 
 
 
