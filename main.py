@@ -104,8 +104,9 @@ def create_comparison_files(db_updated, db_prev):
                 is_new = False
                 price_new = float(j_new['price'])
                 price_old = float(j_old['price'])
-                j_new['price'] = str((price_new-price_old)*100/price_new) + '%'
-                stats.append(j_new)
+                if price_new-price_old != 0:
+                    j_new['price'] = str((price_new-price_old)*100/price_new) + '%'
+                    stats.append(j_new)
                 break
         if is_new:
             new.append(j_new)
