@@ -9,7 +9,7 @@ def print_separator(sep='='):
     print(sep*30)
 
 
-def get_previous_file_name_after_date(extension: str):
+def get_newest_file_name_after_date(extension: str):
     max = defines.min_date
     for file in glob.glob('*' + extension):
 
@@ -28,23 +28,32 @@ def get_previous_file_name_after_date(extension: str):
 def create_file_name_today_date(extension: str):
     return str(date.today().strftime("%Y/%m/%d")).replace('/', '_') + extension
 
+
+def dump_json_by_date_filename(js, extension):
+    file_name = create_file_name_today_date(extension=extension)
+    with open(file_name, 'w+', encoding='utf-8') as f:
+        json.dump(js, f, ensure_ascii=False, indent=4)
+    cprint('DONE - created database for ' + file_name, 'green')
+
+
 # returns the filename of the file created
 def create_database_updated():
     js = list()
-    file_name = ''
+    js_men = list()
+    js_nonhuman = list()
 
-    PROXY = "socks5://localhost:9050"
     tor_proc = subprocess.Popen(defines.tor_path)
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
-    options.add_argument("--headless")
-    options.add_argument('--proxy-server=%s' % PROXY)
+    options.add_argument("--headless") # to no start the chrome window
+    options.add_argument('--proxy-server=%s' % defines.proxi)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
+    time.sleep(5)
 
     for i in range(0, defines.number_pages):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(0.2)
+        time.sleep(1)
 
     lis = driver.find_elements_by_tag_name('li')
     for li in lis:
@@ -68,17 +77,43 @@ def create_database_updated():
                 }
             )
 
+            is_men = False
+            for k in defines.keywords_men:
+                if k in str(product_name).lower() or k in str(product_link).lower():
+                    is_men = True
+            if is_men:
+                js_men.append(
+                    {
+                        'name': product_name,
+                        'price': product_price,
+                        'link': product_link,
+                        'hash': product_hash
+                    }
+                )
+
+            is_nonhuman = True
+            for k in defines.keywords_human:
+                if k in str(product_name).lower() or k in str(product_link).lower():
+                    is_nonhuman = False
+            if is_nonhuman:
+                js_nonhuman.append(
+                    {
+                        'name': product_name,
+                        'price': product_price,
+                        'link': product_link,
+                        'hash': product_hash
+                    }
+                )
+
     try:
-        file_name = create_file_name_today_date(extension='.db')
-        with open(file_name, 'w+', encoding='utf-8') as f:
-            json.dump(js, f, ensure_ascii=False, indent=4)
+        dump_json_by_date_filename(js=js, extension='.db')
+        dump_json_by_date_filename(js=js_men, extension='.men.db')
+        dump_json_by_date_filename(js=js_nonhuman, extension='.nonhuman.db')
+
     except Exception as e:
         cprint(e, 'red')
 
     tor_proc.kill()
-    cprint('DONE - created database for ' + file_name, 'green')
-
-    return file_name
 
 
 def extract_price(j):
@@ -129,20 +164,27 @@ def create_comparison_files(db_updated, db_prev):
     return file_stat_name
 
 
-if __name__ == '__main__':
-    init_color()
+def main():
+    db_men_prev = get_newest_file_name_after_date(extension='.men.db')
+    db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db')
+    create_database_updated()
+    db_men_updated = get_newest_file_name_after_date(extension='.men.db')
+    db_nonhuman_updated = get_newest_file_name_after_date(extension='.nonhuman.db')
 
-    db_prev = get_previous_file_name_after_date(extension='.db')
-    db_updated = create_database_updated()
+    if db_men_prev == '':
+        cprint('CAN\'T CREATE COMPARISON FILES FOR MEN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
+    else:
+        create_comparison_files(db_men_updated, db_men_prev)
 
-    if db_prev == '':
-        cprint('FINISHED', 'green')
-        cprint('CAN\'T CREATE COMPARISON FILES. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
-        exit(2)
-
-    create_comparison_files(db_updated, db_prev)
+    if db_nonhuman_prev == '':
+        cprint('CAN\'T CREATE COMPARISON FILES FOR NONHUMAN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
+    else:
+        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev)
 
     cprint('FINISHED', 'green')
 
 
+if __name__ == '__main__':
+    init_color()
+    main()
 
