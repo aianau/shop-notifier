@@ -164,9 +164,7 @@ def create_comparison_files(db_updated, db_prev):
     return file_stat_name
 
 
-if __name__ == '__main__':
-    init_color()
-
+def main():
     db_men_prev = get_newest_file_name_after_date(extension='.men.db')
     db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db')
     create_database_updated()
@@ -186,4 +184,7 @@ if __name__ == '__main__':
     cprint('FINISHED', 'green')
 
 
+if __name__ == '__main__':
+    init_color()
+    main()
 
