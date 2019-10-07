@@ -1,4 +1,4 @@
-import defines, time, hashlib, json, datetime, glob
+import defines, time, hashlib, json, datetime, glob, subprocess
 from selenium import webdriver
 from datetime import date
 from termcolor import cprint
@@ -33,8 +33,12 @@ def create_database_updated():
     js = list()
     file_name = ''
 
+    PROXY = "socks5://localhost:9050"
+    tor_proc = subprocess.Popen(defines.tor_path)
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
+    options.add_argument("--headless")
+    options.add_argument('--proxy-server=%s' % PROXY)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
 
@@ -71,6 +75,7 @@ def create_database_updated():
     except Exception as e:
         cprint(e, 'red')
 
+    tor_proc.kill()
     cprint('DONE - created database for ' + file_name, 'green')
 
     return file_name
@@ -116,6 +121,7 @@ def create_comparison_files(db_updated, db_prev):
             json.dump(stats, f, ensure_ascii=False, indent=4)
     except Exception as e:
         cprint(e, 'red')
+
 
     cprint('DONE - created stat ' + file_stat_name, 'green')
 
