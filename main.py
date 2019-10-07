@@ -45,14 +45,15 @@ def create_database_updated():
     tor_proc = subprocess.Popen(defines.tor_path)
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
-    options.add_argument("--headless")
+    options.add_argument("--headless") # to no start the chrome window
     options.add_argument('--proxy-server=%s' % defines.proxi)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
+    time.sleep(5)
 
     for i in range(0, defines.number_pages):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(0.2)
+        time.sleep(1)
 
     lis = driver.find_elements_by_tag_name('li')
     for li in lis:
