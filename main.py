@@ -147,14 +147,15 @@ def create_comparison_files(db_updated, db_prev):
             new.append(j_new)
 
     new.sort(key=extract_price, reverse=True)
+    stats.sort(key=extract_price, reverse=True)
 
     try:
         file_stat_name = create_file_name_today_date('.stat')
         with open(file_stat_name, 'w+', encoding='utf-8') as f:
             json.dump(stats, f, ensure_ascii=False, indent=4)
-        file_new_name = create_file_name_today_date('.stat')
+        file_new_name = create_file_name_today_date('.new')
         with open(file_new_name, 'w+', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=4)
+            json.dump(new, f, ensure_ascii=False, indent=4)
     except Exception as e:
         cprint(e, 'red')
 
