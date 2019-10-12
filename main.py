@@ -46,7 +46,7 @@ def create_database_updated():
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--headless") # to no start the chrome window
-    options.add_argument('--proxy-server=%s' % defines.proxi)
+    # options.add_argument('--proxy-server=%s' % defines.proxi)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
     time.sleep(5)
@@ -121,7 +121,7 @@ def extract_price(j):
 
 
 # returns the filename of the file created
-def create_comparison_files(db_updated, db_prev):
+def create_comparison_files(db_updated, db_prev, category):
     stats = list()
     new = list()
     file_stat_name = ''
@@ -150,10 +150,10 @@ def create_comparison_files(db_updated, db_prev):
     stats.sort(key=extract_price, reverse=True)
 
     try:
-        file_stat_name = create_file_name_today_date('.stat')
+        file_stat_name = create_file_name_today_date(category + '.stat')
         with open(file_stat_name, 'w+', encoding='utf-8') as f:
             json.dump(stats, f, ensure_ascii=False, indent=4)
-        file_new_name = create_file_name_today_date('.new')
+        file_new_name = create_file_name_today_date(category + '.new')
         with open(file_new_name, 'w+', encoding='utf-8') as f:
             json.dump(new, f, ensure_ascii=False, indent=4)
     except Exception as e:
@@ -175,12 +175,12 @@ def main():
     if db_men_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR MEN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
     else:
-        create_comparison_files(db_men_updated, db_men_prev)
+        create_comparison_files(db_men_updated, db_men_prev, '.men')
 
     if db_nonhuman_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR NONHUMAN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
     else:
-        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev)
+        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev, '.nojhuman')
 
     cprint('FINISHED', 'green')
 
