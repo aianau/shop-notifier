@@ -9,15 +9,19 @@ def print_separator(sep='='):
     print(sep*30)
 
 
-def get_newest_file_name_after_date(extension: str):
+def get_newest_file_name_after_date(extension: str, for_updated_db):
     max = defines.min_date
     for file in glob.glob('*' + extension):
 
         y, m, d = [int(x) for x in file.split('.')[0].split('_')]
-        prev = datetime.datetime(day=d, month=m, year=y)
+        prev = datetime.date(day=d, month=m, year=y)
 
-        if prev > max and prev != date.today():
-            max = prev
+        if prev > max:
+            if for_updated_db:
+                max = prev
+            else:
+                if prev != date.today():
+                    max = prev
 
     if max != defines.min_date:
         return str(max)[:10].replace('-', '_') + extension
@@ -166,11 +170,11 @@ def create_comparison_files(db_updated, db_prev, category):
 
 
 def main():
-    db_men_prev = get_newest_file_name_after_date(extension='.men.db')
-    db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db')
+    db_men_prev = get_newest_file_name_after_date(extension='.men.db', for_updated_db=False)
+    db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db', for_updated_db=False)
     create_database_updated()
-    db_men_updated = get_newest_file_name_after_date(extension='.men.db')
-    db_nonhuman_updated = get_newest_file_name_after_date(extension='.nonhuman.db')
+    db_men_updated = get_newest_file_name_after_date(extension='.men.db', for_updated_db=True)
+    db_nonhuman_updated = get_newest_file_name_after_date(extension='.nonhuman.db', for_updated_db=True)
 
     if db_men_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR MEN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
@@ -180,7 +184,7 @@ def main():
     if db_nonhuman_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR NONHUMAN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
     else:
-        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev, '.nojhuman')
+        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev, '.nonhuman')
 
     cprint('FINISHED', 'green')
 

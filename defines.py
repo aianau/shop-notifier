@@ -31,4 +31,4 @@ keywords_human = [
 ]
 
 number_pages = 50
-min_date = datetime.datetime(2000, 1, 1)
+min_date = datetime.date(2000, 1, 1)
