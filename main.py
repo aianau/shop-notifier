@@ -16,7 +16,7 @@ def get_newest_file_name_after_date(extension: str):
         y, m, d = [int(x) for x in file.split('.')[0].split('_')]
         prev = datetime.datetime(day=d, month=m, year=y)
 
-        if prev > max:
+        if prev > max and prev != date.today():
             max = prev
 
     if max != defines.min_date:
