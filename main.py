@@ -9,15 +9,19 @@ def print_separator(sep='='):
     print(sep*30)
 
 
-def get_newest_file_name_after_date(extension: str):
+def get_newest_file_name_after_date(extension: str, for_updated_db):
     max = defines.min_date
     for file in glob.glob('*' + extension):
 
         y, m, d = [int(x) for x in file.split('.')[0].split('_')]
-        prev = datetime.datetime(day=d, month=m, year=y)
+        prev = datetime.date(day=d, month=m, year=y)
 
         if prev > max:
-            max = prev
+            if for_updated_db:
+                max = prev
+            else:
+                if prev != date.today():
+                    max = prev
 
     if max != defines.min_date:
         return str(max)[:10].replace('-', '_') + extension
@@ -46,7 +50,7 @@ def create_database_updated():
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--headless") # to no start the chrome window
-    options.add_argument('--proxy-server=%s' % defines.proxi)
+    # options.add_argument('--proxy-server=%s' % defines.proxi)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
     time.sleep(5)
@@ -121,7 +125,7 @@ def extract_price(j):
 
 
 # returns the filename of the file created
-def create_comparison_files(db_updated, db_prev):
+def create_comparison_files(db_updated, db_prev, category):
     stats = list()
     new = list()
     file_stat_name = ''
@@ -147,14 +151,15 @@ def create_comparison_files(db_updated, db_prev):
             new.append(j_new)
 
     new.sort(key=extract_price, reverse=True)
+    stats.sort(key=extract_price, reverse=True)
 
     try:
-        file_stat_name = create_file_name_today_date('.stat')
+        file_stat_name = create_file_name_today_date(category + '.stat')
         with open(file_stat_name, 'w+', encoding='utf-8') as f:
             json.dump(stats, f, ensure_ascii=False, indent=4)
-        file_new_name = create_file_name_today_date('.stat')
+        file_new_name = create_file_name_today_date(category + '.new')
         with open(file_new_name, 'w+', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=4)
+            json.dump(new, f, ensure_ascii=False, indent=4)
     except Exception as e:
         cprint(e, 'red')
 
@@ -165,21 +170,21 @@ def create_comparison_files(db_updated, db_prev):
 
 
 def main():
-    db_men_prev = get_newest_file_name_after_date(extension='.men.db')
-    db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db')
+    db_men_prev = get_newest_file_name_after_date(extension='.men.db', for_updated_db=False)
+    db_nonhuman_prev = get_newest_file_name_after_date(extension='.nonhuman.db', for_updated_db=False)
     create_database_updated()
-    db_men_updated = get_newest_file_name_after_date(extension='.men.db')
-    db_nonhuman_updated = get_newest_file_name_after_date(extension='.nonhuman.db')
+    db_men_updated = get_newest_file_name_after_date(extension='.men.db', for_updated_db=True)
+    db_nonhuman_updated = get_newest_file_name_after_date(extension='.nonhuman.db', for_updated_db=True)
 
     if db_men_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR MEN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
     else:
-        create_comparison_files(db_men_updated, db_men_prev)
+        create_comparison_files(db_men_updated, db_men_prev, '.men')
 
     if db_nonhuman_prev == '':
         cprint('CAN\'T CREATE COMPARISON FILES FOR NONHUMAN. DID NOT HAVE TO WHAT TO COMPARE THE CURRENT ONE.', 'red')
     else:
-        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev)
+        create_comparison_files(db_nonhuman_updated, db_nonhuman_prev, '.nonhuman')
 
     cprint('FINISHED', 'green')
 
