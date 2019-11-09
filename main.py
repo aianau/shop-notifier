@@ -50,7 +50,8 @@ def create_database_updated():
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--headless") # to no start the chrome window
-    # options.add_argument('--proxy-server=%s' % defines.proxi)
+    options.add_argument('--proxy-server=%s' % defines.proxi)
+    options.add_argument('--proxy-server=%s' % defines.proxi)
     driver = webdriver.Chrome(r'.\chromedriver.exe', options=options)
     driver.get(url=defines.url)
     time.sleep(5)
@@ -154,9 +155,9 @@ def create_comparison_files(db_updated, db_prev, category):
     stats.sort(key=extract_price, reverse=True)
 
     try:
-        file_stat_name = create_file_name_today_date(category + '.stat')
-        with open(file_stat_name, 'w+', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=4)
+        # file_stat_name = create_file_name_today_date(category + '.stat')
+        # with open(file_stat_name, 'w+', encoding='utf-8') as f:
+        #     json.dump(stats, f, ensure_ascii=False, indent=4)
         file_new_name = create_file_name_today_date(category + '.new')
         with open(file_new_name, 'w+', encoding='utf-8') as f:
             json.dump(new, f, ensure_ascii=False, indent=4)
