@@ -11,7 +11,7 @@ def print_separator(sep='='):
 
 def get_newest_file_name_after_date(extension: str, for_updated_db):
     max = defines.min_date
-    for file in glob.glob('*' + extension):
+    for file in glob.glob('./results/*' + extension):
 
         y, m, d = [int(x) for x in file.split('.')[0].split('_')]
         prev = datetime.date(day=d, month=m, year=y)
